@@ -45,6 +45,13 @@
           <button id="refreshButton" class="btn-icon" type="button">🔄</button>
           <button id="autoRefreshButton" class="btn-icon" type="button">⏱️</button>
           <p id="lastUpdated" class="last-updated">Last updated: <span id="lastTime">--:--</span></p>
+          <div class="user-menu">
+            <button id="userMenuBtn" class="user-menu-btn">👤 <span id="userMenuText">User</span></button>
+            <div id="userDropdown" class="user-dropdown" style="display: none;">
+              <p id="currentUsername" style="padding: 10px; border-bottom: 1px solid rgba(100,200,255,0.2); color: #94a3b8; font-size: 12px;">Loading...</p>
+              <a href="#" id="logoutBtn" style="display: block; padding: 10px; color: #ff6b6b; text-decoration: none; font-size: 13px; font-weight: 600;">Logout</a>
+            </div>
+          </div>
         </div>
       </header>
 

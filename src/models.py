@@ -49,3 +49,14 @@ class ResponseAction(SQLModel, table=True):
     notes: Optional[str] = Field(default=None, max_length=2000)
     requested_at: datetime = Field(default_factory=utc_now, index=True)
     executed_at: Optional[datetime] = Field(default=None)
+
+
+class User(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    username: str = Field(unique=True, index=True, max_length=64)
+    email: str = Field(unique=True, index=True, max_length=128)
+    hashed_password: str = Field(max_length=256)
+    full_name: Optional[str] = Field(default=None, max_length=128)
+    is_active: bool = Field(default=True)
+    role: str = Field(default="analyst", max_length=32)  # admin, analyst, viewer
+    created_at: datetime = Field(default_factory=utc_now, index=True)

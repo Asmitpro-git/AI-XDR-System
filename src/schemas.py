@@ -98,6 +98,38 @@ class DashboardSummaryRead(BaseModel):
     resolved_alerts: int
     false_positive_alerts: int
     queued_responses: int
+
+
+class UserRegister(BaseModel):
+    username: str = Field(min_length=3, max_length=64)
+    email: str = Field(max_length=128)
+    password: str = Field(min_length=6, max_length=128)
+    full_name: str | None = Field(default=None, max_length=128)
+
+
+class UserLogin(BaseModel):
+    username: str = Field(min_length=3, max_length=64)
+    password: str = Field(min_length=6, max_length=128)
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_in: int
+
+
+class TokenData(BaseModel):
+    username: str | None = None
+
+
+class UserRead(BaseModel):
+    id: int
+    username: str
+    email: str
+    full_name: str | None
+    is_active: bool
+    role: str
+    created_at: datetime
     executed_responses: int
     alerts_by_severity: dict[str, int]
     events_by_source: dict[str, int]

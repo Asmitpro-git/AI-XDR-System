@@ -3,13 +3,13 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException, Query
-from fastapi.responses import FileResponse
+from fastapi import Cookie, Depends, FastAPI, HTTPException, Query
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from src.database import get_session, init_db
-from src.models import Alert, IOC, ResponseAction
+from src.models import Alert, IOC, ResponseAction, User
 from src.schemas import (
     AlertRead,
     AlertStatus,
@@ -22,11 +22,47 @@ from src.schemas import (
     IOCRead,
     ResponseActionCreate,
     ResponseActionRead,
+    Token,
+    UserLogin,
+    UserRead,
+    UserRegister,
+)
+from src.security import (
+    create_access_token,
+    hash_password,
+    verify_password,
+    verify_token,
 )
 from src.services.xdr import ConflictError, NotFoundError, ValidationError, XDRService
 
 BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "static"
+
+
+# Dependency to get current user from JWT token
+def get_current_user(
+    session: Session = Depends(get_session),
+    token: str | None = Cookie(default=None, alias="auth_token"),
+) -> User:
+    """Extract user from JWT token cookie."""
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    username = verify_token(token)
+    if not username:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    
+    user = session.exec(select(User).where(User.username == username)).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="User account is inactive")
+    
+    return user
+
+
+CurrentUserDep = Annotated[User, Depends(get_current_user)]
 
 
 @asynccontextmanager
@@ -62,23 +98,115 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@app.get("/login", include_in_schema=False)
+def login_page() -> FileResponse:
+    """Serve the login page."""
+    return FileResponse(STATIC_DIR / "login.html")
+
+
+@app.post("/api/auth/register", status_code=201)
+def register(
+    payload: UserRegister, session: Session = Depends(get_session)
+) -> dict:
+    """Register a new user."""
+    # Check if user already exists
+    existing_user = session.exec(
+        select(User).where(User.username == payload.username)
+    ).first()
+    if existing_user:
+        raise HTTPException(status_code=409, detail="Username already taken")
+    
+    existing_email = session.exec(
+        select(User).where(User.email == payload.email)
+    ).first()
+    if existing_email:
+        raise HTTPException(status_code=409, detail="Email already registered")
+    
+    # Create new user
+    user = User(
+        username=payload.username,
+        email=payload.email,
+        full_name=payload.full_name,
+        hashed_password=hash_password(payload.password),
+        is_active=True,
+        role="analyst",
+    )
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return {
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "full_name": user.full_name,
+        "is_active": user.is_active,
+        "role": user.role,
+        "created_at": user.created_at.isoformat(),
+    }
+
+
+@app.post("/api/auth/login", response_model=Token)
+def login(
+    payload: UserLogin, session: Session = Depends(get_session)
+) -> Token:
+    """Login with username and password."""
+    user = session.exec(
+        select(User).where(User.username == payload.username)
+    ).first()
+    
+    if not user or not verify_password(payload.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="User account is inactive")
+    
+    access_token, expires_in = create_access_token(data={"sub": user.username})
+    return Token(access_token=access_token, expires_in=expires_in)
+
+
+@app.get("/api/auth/me", response_model=UserRead)
+def get_current_user_info(current_user: CurrentUserDep) -> User:
+    """Get current authenticated user info."""
+    return current_user
+
+
+@app.post("/api/auth/logout")
+def logout() -> dict[str, str]:
+    """Logout endpoint (token is invalidated on client side by removing cookie)."""
+    return {"message": "Logged out successfully"}
+
+
 @app.get("/dashboard", include_in_schema=False)
-def dashboard() -> FileResponse:
+def dashboard(token: str | None = Cookie(default=None, alias="auth_token")) -> FileResponse:
+    """Serve the dashboard (redirects to login if not authenticated)."""
+    if not token:
+        return RedirectResponse(url="/login", status_code=303)
+    
+    username = verify_token(token)
+    if not username:
+        return RedirectResponse(url="/login", status_code=303)
+    
     return FileResponse(STATIC_DIR / "dashboard.html")
 
 
 @app.get("/view/alerts", include_in_schema=False)
-def alerts_page() -> FileResponse:
+def alerts_page(token: str | None = Cookie(default=None, alias="auth_token")):
+    if not token or not verify_token(token):
+        return RedirectResponse(url="/login", status_code=303)
     return FileResponse(STATIC_DIR / "alerts.html")
 
 
 @app.get("/view/iocs", include_in_schema=False)
-def iocs_page() -> FileResponse:
+def iocs_page(token: str | None = Cookie(default=None, alias="auth_token")):
+    if not token or not verify_token(token):
+        return RedirectResponse(url="/login", status_code=303)
     return FileResponse(STATIC_DIR / "iocs.html")
 
 
 @app.get("/view/reports", include_in_schema=False)
-def reports_page() -> FileResponse:
+def reports_page(token: str | None = Cookie(default=None, alias="auth_token")):
+    if not token or not verify_token(token):
+        return RedirectResponse(url="/login", status_code=303)
     return FileResponse(STATIC_DIR / "reports.html")
 
 

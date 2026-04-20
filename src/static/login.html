@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>XDR Login - Security Operations</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Space Grotesk", sans-serif;
+        background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .login-container {
+        background: rgba(15, 23, 42, 0.95);
+        border: 1px solid rgba(100, 200, 255, 0.2);
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+        padding: 40px;
+        width: 100%;
+        max-width: 400px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      }
+
+      .login-header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .brand-icon {
+        font-size: 48px;
+        margin-bottom: 10px;
+      }
+
+      .login-header h1 {
+        color: #e0e7ff;
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+
+      .login-header p {
+        color: #94a3b8;
+        font-size: 14px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        color: #cbd5e1;
+        font-size: 13px;
+        font-weight: 500;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      input[type="text"],
+      input[type="email"],
+      input[type="password"] {
+        width: 100%;
+        padding: 12px 14px;
+        background: rgba(30, 41, 59, 0.8);
+        border: 1px solid rgba(100, 200, 255, 0.3);
+        border-radius: 6px;
+        color: #e0e7ff;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 13px;
+        transition: all 0.3s ease;
+      }
+
+      input[type="text"]:focus,
+      input[type="email"]:focus,
+      input[type="password"]:focus {
+        outline: none;
+        border-color: rgba(100, 200, 255, 0.6);
+        background: rgba(30, 41, 59, 1);
+        box-shadow: 0 0 12px rgba(100, 200, 255, 0.2);
+      }
+
+      .form-actions {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      button {
+        flex: 1;
+        padding: 12px 16px;
+        border: none;
+        border-radius: 6px;
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      #loginBtn {
+        background: linear-gradient(135deg, #64c8ff 0%, #3b82f6 100%);
+        color: #0f172a;
+      }
+
+      #loginBtn:hover:not(:disabled) {
+        box-shadow: 0 0 20px rgba(100, 200, 255, 0.5);
+        transform: translateY(-2px);
+      }
+
+      #loginBtn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      #toggleRegisterBtn {
+        background: rgba(100, 200, 255, 0.1);
+        color: #64c8ff;
+        border: 1px solid rgba(100, 200, 255, 0.3);
+      }
+
+      #toggleRegisterBtn:hover {
+        background: rgba(100, 200, 255, 0.2);
+      }
+
+      .auth-toggle {
+        text-align: center;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(100, 200, 255, 0.2);
+      }
+
+      .auth-toggle p {
+        color: #94a3b8;
+        font-size: 12px;
+      }
+
+      .auth-toggle a {
+        color: #64c8ff;
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .auth-toggle a:hover {
+        text-decoration: underline;
+      }
+
+      .form-container {
+        display: none;
+      }
+
+      .form-container.active {
+        display: block;
+      }
+
+      .error-message {
+        color: #ff6b6b;
+        font-size: 12px;
+        padding: 8px 12px;
+        background: rgba(255, 107, 107, 0.1);
+        border: 1px solid rgba(255, 107, 107, 0.3);
+        border-radius: 4px;
+        margin-bottom: 15px;
+        display: none;
+      }
+
+      .error-message.show {
+        display: block;
+      }
+
+      .success-message {
+        color: #4ade80;
+        font-size: 12px;
+        padding: 8px 12px;
+        background: rgba(74, 222, 128, 0.1);
+        border: 1px solid rgba(74, 222, 128, 0.3);
+        border-radius: 4px;
+        margin-bottom: 15px;
+        display: none;
+      }
+
+      .success-message.show {
+        display: block;
+      }
+
+      .demo-credentials {
+        background: rgba(100, 200, 255, 0.05);
+        border: 1px solid rgba(100, 200, 255, 0.2);
+        border-radius: 6px;
+        padding: 12px;
+        margin-top: 20px;
+        font-size: 11px;
+        color: #cbd5e1;
+      }
+
+      .demo-credentials strong {
+        color: #64c8ff;
+      }
+
+      .demo-credentials p {
+        margin: 4px 0;
+        font-family: "IBM Plex Mono", monospace;
+      }
+
+      @media (max-width: 480px) {
+        .login-container {
+          padding: 30px 20px;
+        }
+
+        .login-header h1 {
+          font-size: 20px;
+        }
+
+        .form-actions {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-container">
+      <div class="login-header">
+        <div class="brand-icon">⚔️</div>
+        <h1>XDR Command Deck</h1>
+        <p>Security Operations - Threat Detection & Response</p>
+      </div>
+
+      <!-- Login Form -->
+      <form id="loginForm" class="form-container active" onsubmit="handleLogin(event)">
+        <div id="loginErrorMsg" class="error-message"></div>
+        
+        <div class="form-group">
+          <label for="loginUsername">Username</label>
+          <input
+            type="text"
+            id="loginUsername"
+            name="username"
+            placeholder="Enter your username"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="loginPassword">Password</label>
+          <input
+            type="password"
+            id="loginPassword"
+            name="password"
+            placeholder="Enter your password"
+            required
+          />
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" id="loginBtn">Login</button>
+          <button type="button" id="toggleRegisterBtn" onclick="toggleForms()">
+            Sign Up
+          </button>
+        </div>
+
+        <div class="demo-credentials">
+          <strong>Demo Account:</strong>
+          <p>Username: <strong>admin</strong></p>
+          <p>Password: <strong>password123</strong></p>
+        </div>
+      </form>
+
+      <!-- Register Form -->
+      <form id="registerForm" class="form-container" onsubmit="handleRegister(event)">
+        <div id="registerErrorMsg" class="error-message"></div>
+        <div id="registerSuccessMsg" class="success-message"></div>
+
+        <div class="form-group">
+          <label for="registerUsername">Username</label>
+          <input
+            type="text"
+            id="registerUsername"
+            name="username"
+            placeholder="Choose a username (3+ chars)"
+            minlength="3"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="registerEmail">Email</label>
+          <input
+            type="email"
+            id="registerEmail"
+            name="email"
+            placeholder="Enter your email"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="registerFullName">Full Name (optional)</label>
+          <input
+            type="text"
+            id="registerFullName"
+            name="full_name"
+            placeholder="Enter your full name"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="registerPassword">Password</label>
+          <input
+            type="password"
+            id="registerPassword"
+            name="password"
+            placeholder="Choose a password (6+ chars)"
+            minlength="6"
+            required
+          />
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" id="registerBtn">Create Account</button>
+          <button type="button" id="toggleLoginBtn" onclick="toggleForms()">
+            Back to Login
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <script>
+      function toggleForms() {
+        document.getElementById("loginForm").classList.toggle("active");
+        document.getElementById("registerForm").classList.toggle("active");
+        clearMessages();
+      }
+
+      function clearMessages() {
+        document.getElementById("loginErrorMsg").classList.remove("show");
+        document.getElementById("registerErrorMsg").classList.remove("show");
+        document.getElementById("registerSuccessMsg").classList.remove("show");
+      }
+
+      async function handleLogin(event) {
+        event.preventDefault();
+        const username = document.getElementById("loginUsername").value;
+        const password = document.getElementById("loginPassword").value;
+        const errorEl = document.getElementById("loginErrorMsg");
+        const loginBtn = document.getElementById("loginBtn");
+
+        try {
+          loginBtn.disabled = true;
+          loginBtn.textContent = "Logging in...";
+          errorEl.classList.remove("show");
+
+          const response = await fetch("/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password }),
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || "Login failed");
+          }
+
+          const data = await response.json();
+          
+          // Set auth token as a cookie
+          document.cookie = `auth_token=${data.access_token}; path=/; max-age=${data.expires_in}`;
+          
+          // Redirect to dashboard
+          window.location.href = "/dashboard";
+        } catch (error) {
+          errorEl.textContent = error.message;
+          errorEl.classList.add("show");
+          loginBtn.disabled = false;
+          loginBtn.textContent = "Login";
+        }
+      }
+
+      async function handleRegister(event) {
+        event.preventDefault();
+        const username = document.getElementById("registerUsername").value;
+        const email = document.getElementById("registerEmail").value;
+        const full_name = document.getElementById("registerFullName").value || null;
+        const password = document.getElementById("registerPassword").value;
+        const errorEl = document.getElementById("registerErrorMsg");
+        const successEl = document.getElementById("registerSuccessMsg");
+        const registerBtn = document.getElementById("registerBtn");
+
+        try {
+          registerBtn.disabled = true;
+          registerBtn.textContent = "Creating account...";
+          errorEl.classList.remove("show");
+          successEl.classList.remove("show");
+
+          const response = await fetch("/api/auth/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, email, full_name, password }),
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || "Registration failed");
+          }
+
+          successEl.textContent = "Account created! You can now login.";
+          successEl.classList.add("show");
+          
+          // Clear form
+          event.target.reset();
+          
+          // Switch to login form after 2 seconds
+          setTimeout(() => {
+            toggleForms();
+          }, 2000);
+        } catch (error) {
+          errorEl.textContent = error.message;
+          errorEl.classList.add("show");
+          registerBtn.disabled = false;
+          registerBtn.textContent = "Create Account";
+        }
+      }
+
+      // Check if user is already logged in
+      window.addEventListener("load", async () => {
+        try {
+          const response = await fetch("/api/auth/me", {
+            credentials: "include",
+          });
+          if (response.ok) {
+            // User is already authenticated, redirect to dashboard
+            window.location.href = "/dashboard";
+          }
+        } catch (error) {
+          // Not authenticated, stay on login page
+        }
+      });
+    </script>
+  </body>
+</html>

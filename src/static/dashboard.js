@@ -334,6 +334,67 @@ function toggleAutoRefresh() {
   setStatus(autoRefreshEnabled ? "Auto refresh enabled" : "Auto refresh disabled");
 }
 
+// User menu functionality
+async function loadUserInfo() {
+  try {
+    const response = await fetch("/api/auth/me", {
+      credentials: "include",
+    });
+    if (response.ok) {
+      const user = await response.json();
+      const userMenuText = document.getElementById("userMenuText");
+      const currentUsername = document.getElementById("currentUsername");
+      if (userMenuText) {
+        userMenuText.textContent = user.username || "User";
+      }
+      if (currentUsername) {
+        currentUsername.textContent = `Logged in as: ${user.username} (${user.role})`;
+      }
+    }
+  } catch (error) {
+    console.error("Error loading user info:", error);
+  }
+}
+
+function initializeUserMenu() {
+  const userMenuBtn = document.getElementById("userMenuBtn");
+  const userDropdown = document.getElementById("userDropdown");
+  const logoutBtn = document.getElementById("logoutBtn");
+
+  if (!userMenuBtn || !userDropdown || !logoutBtn) return;
+
+  // Toggle dropdown
+  userMenuBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    userDropdown.style.display =
+      userDropdown.style.display === "none" ? "block" : "none";
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener("click", () => {
+    userDropdown.style.display = "none";
+  });
+
+  // Logout functionality
+  logoutBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      // Clear auth token cookie
+      document.cookie = "auth_token=; path=/; max-age=0";
+      window.location.href = "/login";
+    } catch (error) {
+      console.error("Error logging out:", error);
+      alert("Logout failed. Try again.");
+    }
+  });
+
+  loadUserInfo();
+}
+
 function startAutoRefresh() {
   if (refreshTimer !== null) clearInterval(refreshTimer);
   refreshTimer = setInterval(() => {
@@ -345,6 +406,7 @@ function init() {
   const dom = getDom();
   if (dom.refreshButton) dom.refreshButton.addEventListener("click", refreshDashboard);
   if (dom.autoRefreshButton) dom.autoRefreshButton.addEventListener("click", toggleAutoRefresh);
+  initializeUserMenu();
   startAutoRefresh();
   refreshDashboard();
 }
