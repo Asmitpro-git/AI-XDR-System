@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Alerts - XDR Command Deck</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/dashboard.css" />
+  </head>
+  <body>
+    <div class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-icon">⚔️</div>
+        <div class="brand-text">
+          <div class="brand-title">XDR</div>
+          <div class="brand-subtitle">Ops</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/dashboard" class="nav-item">Dashboards</a>
+        <a href="/view/alerts" class="nav-item active">Alerts</a>
+        <a href="/view/iocs" class="nav-item">IOCs</a>
+        <a href="/view/reports" class="nav-item">Reports</a>
+      </nav>
+    </div>
+
+    <main class="shell">
+      <header class="topbar">
+        <div class="topbar-left">
+          <p class="page-title">Security Alerts</p>
+          <div class="breadcrumb">
+            <a href="/dashboard">Dashboard</a>
+            <span class="sep">›</span>
+            <span>Alerts</span>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <input type="text" class="search-box" placeholder="Search alerts..." />
+          <button id="refreshButton" class="btn-icon" type="button">🔄</button>
+          <button id="autoRefreshButton" class="btn-icon" type="button">⏱️</button>
+          <p id="lastUpdated" class="last-updated">Last updated: <span id="lastTime">--:--</span></p>
+        </div>
+      </header>
+
+      <div class="content">
+        <section style="margin-bottom: 20px;">
+          <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <button class="btn-filter" data-filter="all">All</button>
+            <button class="btn-filter" data-filter="critical">🔴 Critical</button>
+            <button class="btn-filter" data-filter="high">🟠 High</button>
+            <button class="btn-filter" data-filter="medium">🟡 Medium</button>
+            <button class="btn-filter" data-filter="low">🟢 Low</button>
+          </div>
+          <p id="statusMessage" style="color: #8b949e; font-size: 12px; margin-bottom: 10px;">Loading alerts...</p>
+        </section>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h3>Active Alerts</h3>
+            <div class="menu-icon">⋮</div>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Severity</th>
+                <th>Detection</th>
+                <th>Time</th>
+                <th>Entity</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="alertsBody">
+              <tr><td colspan="5" class="empty">Loading alerts...</td></tr>
+            </tbody>
+          </table>
+        </article>
+      </div>
+    </main>
+
+    <script src="/static/alerts.js"></script>
+  </body>
+</html>

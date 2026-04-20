@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IOCs - XDR Command Deck</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/dashboard.css" />
+  </head>
+  <body>
+    <div class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-icon">⚔️</div>
+        <div class="brand-text">
+          <div class="brand-title">XDR</div>
+          <div class="brand-subtitle">Ops</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/dashboard" class="nav-item">Dashboards</a>
+        <a href="/view/alerts" class="nav-item">Alerts</a>
+        <a href="/view/iocs" class="nav-item active">IOCs</a>
+        <a href="/view/reports" class="nav-item">Reports</a>
+      </nav>
+    </div>
+
+    <main class="shell">
+      <header class="topbar">
+        <div class="topbar-left">
+          <p class="page-title">Indicators of Compromise</p>
+          <div class="breadcrumb">
+            <a href="/dashboard">Dashboard</a>
+            <span class="sep">›</span>
+            <span>IOCs</span>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <input type="text" class="search-box" placeholder="Search IOCs..." />
+          <button id="refreshButton" class="btn-icon" type="button">🔄</button>
+          <button id="autoRefreshButton" class="btn-icon" type="button">⏱️</button>
+          <p id="lastUpdated" class="last-updated">Last updated: <span id="lastTime">--:--</span></p>
+        </div>
+      </header>
+
+      <div class="content">
+        <section style="margin-bottom: 20px;">
+          <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <button class="btn-filter" data-filter="all">All Types</button>
+            <button class="btn-filter" data-filter="ipv4">IPv4</button>
+            <button class="btn-filter" data-filter="domain">Domain</button>
+            <button class="btn-filter" data-filter="hash">Hash</button>
+            <button class="btn-filter" data-filter="url">URL</button>
+          </div>
+          <p id="statusMessage" style="color: #8b949e; font-size: 12px; margin-bottom: 10px;">Loading IOCs...</p>
+        </section>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h3>Indicators of Compromise</h3>
+            <div class="menu-icon">⋮</div>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Added</th>
+                <th>Type</th>
+                <th>Value</th>
+                <th>Confidence</th>
+                <th>Match Count</th>
+              </tr>
+            </thead>
+            <tbody id="iocsBody">
+              <tr><td colspan="5" class="empty">Loading IOCs...</td></tr>
+            </tbody>
+          </table>
+        </article>
+      </div>
+    </main>
+
+    <script src="/static/iocs.js"></script>
+  </body>
+</html>

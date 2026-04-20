@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reports - XDR Command Deck</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/dashboard.css" />
+  </head>
+  <body>
+    <div class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-icon">⚔️</div>
+        <div class="brand-text">
+          <div class="brand-title">XDR</div>
+          <div class="brand-subtitle">Ops</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/dashboard" class="nav-item">Dashboards</a>
+        <a href="/view/alerts" class="nav-item">Alerts</a>
+        <a href="/view/iocs" class="nav-item">IOCs</a>
+        <a href="/view/reports" class="nav-item active">Reports</a>
+      </nav>
+    </div>
+
+    <main class="shell">
+      <header class="topbar">
+        <div class="topbar-left">
+          <p class="page-title">Security Reports</p>
+          <div class="breadcrumb">
+            <a href="/dashboard">Dashboard</a>
+            <span class="sep">›</span>
+            <span>Reports</span>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <input type="text" class="search-box" placeholder="Search reports..." />
+          <button id="refreshButton" class="btn-icon" type="button">🔄</button>
+          <button id="autoRefreshButton" class="btn-icon" type="button">⏱️</button>
+          <p id="lastUpdated" class="last-updated">Last updated: <span id="lastTime">--:--</span></p>
+        </div>
+      </header>
+
+      <div class="content">
+        <section style="margin-bottom: 30px;">
+          <h3 style="color: #e6edf3; margin-bottom: 15px;">Generate Report</h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+            <button class="report-card" onclick="generateReport('daily')">
+              <div style="font-size: 20px; margin-bottom: 8px;">📅</div>
+              <div style="font-weight: 600; margin-bottom: 4px;">Daily Report</div>
+              <div style="font-size: 12px; color: #8b949e;">Last 24 hours</div>
+            </button>
+            <button class="report-card" onclick="generateReport('weekly')">
+              <div style="font-size: 20px; margin-bottom: 8px;">📊</div>
+              <div style="font-weight: 600; margin-bottom: 4px;">Weekly Report</div>
+              <div style="font-size: 12px; color: #8b949e;">Last 7 days</div>
+            </button>
+            <button class="report-card" onclick="generateReport('monthly')">
+              <div style="font-size: 20px; margin-bottom: 8px;">📈</div>
+              <div style="font-weight: 600; margin-bottom: 4px;">Monthly Report</div>
+              <div style="font-size: 12px; color: #8b949e;">Last 30 days</div>
+            </button>
+            <button class="report-card" onclick="generateReport('executive')">
+              <div style="font-size: 20px; margin-bottom: 8px;">👔</div>
+              <div style="font-weight: 600; margin-bottom: 4px;">Executive Summary</div>
+              <div style="font-size: 12px; color: #8b949e;">Overview</div>
+            </button>
+          </div>
+        </section>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h3>Recent Reports</h3>
+            <div class="menu-icon">⋮</div>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Report Type</th>
+                <th>Generated</th>
+                <th>Period</th>
+                <th>Alerts</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="reportsBody">
+              <tr class="report-row">
+                <td>Daily Report</td>
+                <td><span class="time-ago">2h ago</span></td>
+                <td>Apr 17, 2026</td>
+                <td>12</td>
+                <td><span class="status-completed">✓ Completed</span></td>
+              </tr>
+              <tr class="report-row">
+                <td>Weekly Report</td>
+                <td><span class="time-ago">1d ago</span></td>
+                <td>Apr 10 - Apr 17</td>
+                <td>87</td>
+                <td><span class="status-completed">✓ Completed</span></td>
+              </tr>
+              <tr class="report-row">
+                <td>Daily Report</td>
+                <td><span class="time-ago">1d ago</span></td>
+                <td>Apr 16, 2026</td>
+                <td>8</td>
+                <td><span class="status-completed">✓ Completed</span></td>
+              </tr>
+              <tr class="report-row">
+                <td>Executive Summary</td>
+                <td><span class="time-ago">3d ago</span></td>
+                <td>Apr 10 - Apr 17</td>
+                <td>127</td>
+                <td><span class="status-completed">✓ Completed</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </article>
+      </div>
+    </main>
+
+    <style>
+      .report-card {
+        background: linear-gradient(135deg, rgba(88, 166, 255, 0.1), rgba(79, 195, 247, 0.05));
+        border: 1px solid rgba(88, 166, 255, 0.3);
+        border-radius: 8px;
+        padding: 16px;
+        cursor: pointer;
+        text-align: center;
+        color: #e6edf3;
+        transition: all 0.3s ease;
+      }
+
+      .report-card:hover {
+        background: linear-gradient(135deg, rgba(88, 166, 255, 0.15), rgba(79, 195, 247, 0.1));
+        border-color: rgba(88, 166, 255, 0.6);
+        transform: translateY(-2px);
+      }
+
+      .report-row {
+        border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+      }
+
+      .report-row:last-child {
+        border-bottom: none;
+      }
+
+      .time-ago {
+        color: #8b949e;
+        font-size: 12px;
+      }
+
+      .status-completed {
+        color: #26a641;
+        font-size: 12px;
+        font-weight: 500;
+      }
+    </style>
+
+    <script>
+      document.getElementById("refreshButton").addEventListener("click", () => {
+        location.reload();
+      });
+
+      document.getElementById("autoRefreshButton").addEventListener("click", () => {
+        const btn = document.getElementById("autoRefreshButton");
+        btn.textContent = btn.textContent.includes("ON") ? "⏱️ OFF" : "⏱️ ON";
+      });
+
+      function generateReport(type) {
+        const btn = event.target.closest(".report-card");
+        btn.disabled = true;
+        btn.textContent = "⏳ Generating...";
+        setTimeout(() => {
+          alert(`${type.charAt(0).toUpperCase() + type.slice(1)} report generated successfully!`);
+          btn.disabled = false;
+          btn.innerHTML = `<div style="font-size: 20px; margin-bottom: 8px;">📄</div>
+            <div style="font-weight: 600; margin-bottom: 4px;">${type.charAt(0).toUpperCase() + type.slice(1)} Report</div>
+            <div style="font-size: 12px; color: #8b949e;">Recently generated</div>`;
+          location.reload();
+        }, 1000);
+      }
+    </script>
+  </body>
+</html>

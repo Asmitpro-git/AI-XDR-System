@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>XDR Command Deck</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="/static/dashboard.css" />
+  </head>
+  <body>
+    <div class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-icon">⚔️</div>
+        <div class="brand-text">
+          <div class="brand-title">XDR</div>
+          <div class="brand-subtitle">Ops</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/dashboard" class="nav-item active">Dashboards</a>
+        <a href="/view/alerts" class="nav-item">Alerts</a>
+        <a href="/view/iocs" class="nav-item">IOCs</a>
+        <a href="/view/reports" class="nav-item">Reports</a>
+      </nav>
+    </div>
+
+    <main class="shell">
+      <header class="topbar">
+        <div class="topbar-left">
+          <p class="page-title">Dashboards and reports</p>
+          <div class="breadcrumb">
+            <a href="#">All dashboards</a>
+            <span class="sep">›</span>
+            <span>XDR Dashboard</span>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <input type="text" class="search-box" placeholder="Search..." />
+          <button id="refreshButton" class="btn-icon" type="button">🔄</button>
+          <button id="autoRefreshButton" class="btn-icon" type="button">⏱️</button>
+          <p id="lastUpdated" class="last-updated">Last updated: <span id="lastTime">--:--</span></p>
+        </div>
+      </header>
+
+      <div class="content">
+        <section class="kpi-row" aria-label="Key metrics">
+          <article class="kpi-card">
+            <p class="kpi-label">New detections</p>
+            <p class="kpi-label-sub">Last day</p>
+            <h2 class="kpi-value" id="metricNewDetections">0</h2>
+          </article>
+          <article class="kpi-card">
+            <p class="kpi-label">Prevented attacks</p>
+            <p class="kpi-label-sub">Last day</p>
+            <h2 class="kpi-value" id="metricPreventedAttacks">0</h2>
+          </article>
+          <article class="kpi-card">
+            <p class="kpi-label">Total hunting leads</p>
+            <p class="kpi-label-sub">Generated</p>
+            <h2 class="kpi-value" id="metricHuntingLeads">0</h2>
+          </article>
+          <article class="kpi-card">
+            <p class="kpi-label">Total hunting leads</p>
+            <p class="kpi-label-sub">Investigated</p>
+            <h2 class="kpi-value" id="metricHuntingLeadsInv">0</h2>
+          </article>
+          <article class="kpi-card">
+            <p class="kpi-label">Remediated detections</p>
+            <p class="kpi-label-sub">Last 30 days</p>
+            <h2 class="kpi-value" id="metricRemediatedDetections">0</h2>
+          </article>
+          <article class="kpi-card highlight">
+            <p class="kpi-label">Current CrowdScore</p>
+            <p class="kpi-label-sub">Risk Rating</p>
+            <h2 class="kpi-value-score" id="metricCrowdScore">0<span>/100</span></h2>
+          </article>
+        </section>
+
+        <section class="dashboard-grid">
+          <article class="panel">
+            <div class="panel-head">
+              <h3>Events by source</h3>
+              <div class="menu-icon">⋮</div>
+            </div>
+            <div class="chart-container">
+              <canvas id="sourceChart" style="max-height: 300px;"></canvas>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <h3>Alerts by severity</h3>
+              <div class="menu-icon">⋮</div>
+            </div>
+            <div class="chart-container chart-donut">
+              <canvas id="severityChart" style="max-height: 300px;"></canvas>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <h3>Detection timeline</h3>
+              <div class="menu-icon">⋮</div>
+            </div>
+            <div class="chart-container">
+              <canvas id="detectionChart" style="max-height: 300px;"></canvas>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <h3>Alert status distribution</h3>
+              <div class="menu-icon">⋮</div>
+            </div>
+            <div class="chart-container chart-donut">
+              <canvas id="statusChart" style="max-height: 300px;"></canvas>
+            </div>
+          </article>
+        </section>
+
+        <section class="data-grid">
+          <article class="panel">
+            <div class="panel-head">
+              <h3>Most recent detections</h3>
+              <div class="menu-icon">⋮</div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Severity</th>
+                    <th>Tactic & Technique</th>
+                    <th>Time</th>
+                    <th>Host ID</th>
+                    <th>Link</th>
+                  </tr>
+                </thead>
+                <tbody id="alertsBody"></tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <h3>Events stream</h3>
+              <div class="menu-icon">⋮</div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Source</th>
+                    <th>Host</th>
+                    <th>Type</th>
+                    <th>Severity</th>
+                  </tr>
+                </thead>
+                <tbody id="eventsBody"></tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <h3>Response actions</h3>
+              <div class="menu-icon">⋮</div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Action</th>
+                    <th>Status</th>
+                    <th>Alert ID</th>
+                    <th>Notes</th>
+                  </tr>
+                </thead>
+                <tbody id="responsesBody"></tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <h3>Tracked IOCs</h3>
+              <div class="menu-icon">⋮</div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Added</th>
+                    <th>Type</th>
+                    <th>Value</th>
+                    <th>Confidence</th>
+                  </tr>
+                </thead>
+                <tbody id="iocsBody"></tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+      </div>
+
+      <p id="statusMessage" class="status-message" role="status" aria-live="polite"></p>
+    </main>
+
+    <script src="/static/dashboard.js"></script>
+  </body>
+</html>
